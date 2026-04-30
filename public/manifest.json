@@ -1,23 +1,17 @@
 {
   "name": "גִּלּוּי (GILUY)",
   "short_name": "GILUY",
-  "description": "Truth extraction protocol.",
+  "description": "ISO/IEC 2026 Manual de Arquitetura v9.0",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#050505",
-  "theme_color": "#050505",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
   "icons": [
     {
-      "src": "/icon.svg",
-      "sizes": "48x48 72x72 96x96 144x144 192x192 512x512",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "/icon.svg",
-      "sizes": "48x48 72x72 96x96 144x144 192x192 512x512",
-      "type": "image/svg+xml",
-      "purpose": "maskable"
+      "src": "https://img.icons8.com/ios-filled/512/ffffff/circuit.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

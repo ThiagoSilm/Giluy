@@ -11,19 +11,13 @@ export interface QuantizedBuffer {
   max: number;
   bits: QuantizationBits;
   originalLength: number;
-  dictRef?: string;
 }
 
 export class TurboQuant {
-  private static dictionary = new Map<string, QuantizedBuffer>();
-
   /**
    * Compresses a float64 array into a quantized Uint8Array.
    */
-  static compress(embeddings: Float64Array, bits: QuantizationBits = 4, cacheKey?: string): QuantizedBuffer {
-    if (cacheKey && this.dictionary.has(cacheKey)) {
-      return { ...this.dictionary.get(cacheKey)!, dictRef: cacheKey };
-    }
+  static compress(embeddings: Float64Array, bits: QuantizationBits = 4): QuantizedBuffer {
     const len = embeddings.length;
     let min = Infinity;
     let max = -Infinity;
@@ -62,28 +56,19 @@ export class TurboQuant {
       }
     }
 
-    const buffer: QuantizedBuffer = {
+    return {
       data: packedData,
       min,
       max,
       bits,
       originalLength: len
     };
-    
-    if (cacheKey) {
-      this.dictionary.set(cacheKey, buffer);
-    }
-
-    return buffer;
   }
 
   /**
    * Decompresses a quantized buffer back to float64 (on-demand).
    */
   static decompress(buffer: QuantizedBuffer): Float64Array {
-    if (buffer.dictRef && this.dictionary.has(buffer.dictRef)) {
-      buffer = this.dictionary.get(buffer.dictRef)!;
-    }
     const { data, min, max, bits, originalLength } = buffer;
     const result = new Float64Array(originalLength);
     const range = max - min;

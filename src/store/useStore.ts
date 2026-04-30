@@ -7,20 +7,14 @@ interface AppState {
   depth: DepthLevel;
   state: ProcessState;
   modelStatus: ModelStatus;
-  modelProgress: string;
-  llmSupported: boolean;
   result: ProcessResponse | null;
   history: HistoryItem[];
   error: string | null;
-  coords: string;
   
   setInput: (input: string) => void;
-  setCoords: (coords: string) => void;
   setDepth: (depth: DepthLevel) => void;
   setState: (state: ProcessState) => void;
   setModelStatus: (status: ModelStatus) => void;
-  setModelProgress: (progress: string) => void;
-  setLLMSupported: (supported: boolean) => void;
   setResult: (result: ProcessResponse | null) => void;
   setError: (error: string | null) => void;
   addToHistory: (item: HistoryItem) => void;
@@ -34,20 +28,14 @@ export const useStore = create<AppState>()(
       depth: 1,
       state: 'idle',
       modelStatus: 'none',
-      modelProgress: '',
-      llmSupported: false,
       result: null,
       history: [],
       error: null,
-      coords: '',
 
       setInput: (input) => set({ input }),
-      setCoords: (coords) => set({ coords }),
-      setDepth: (depth) => set({ depth, result: null }),
+      setDepth: (depth) => set({ depth }),
       setState: (state) => set({ state }),
       setModelStatus: (modelStatus) => set({ modelStatus }),
-      setModelProgress: (modelProgress) => set({ modelProgress }),
-      setLLMSupported: (llmSupported) => set({ llmSupported }),
       setResult: (result) => set({ result }),
       setError: (error) => set({ error }),
       addToHistory: (item) => set((state) => ({ 
@@ -62,4 +50,3 @@ export const useStore = create<AppState>()(
     }
   )
 );
-
