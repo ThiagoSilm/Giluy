@@ -66,7 +66,7 @@ export default function App() {
                 className="text-[10px] uppercase tracking-widest flex items-center gap-1.5 px-3 py-1 bg-white/10 hover:bg-white/20 rounded-lg transition-colors border border-white/5"
               >
                 <Download size={10} />
-                Activate local engine (~1.5GB)
+                Activate Kernel & Models (~40MB)
               </button>
             )}
           </div>
