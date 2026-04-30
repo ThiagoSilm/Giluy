@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { useStore } from '../store/useStore';
 import { History as HistoryIcon, Trash2, ChevronRight } from 'lucide-react';
-import { cn } from '../lib/utils';
 
-export const History: React.FC = () => {
-  const { history, clearHistory, setResult, setInput, setDepth } = useStore();
+export const History: React.FC = memo(() => {
+  const history = useStore(state => state.history);
+  const clearHistory = useStore(state => state.clearHistory);
+  const setResult = useStore(state => state.setResult);
+  const setInput = useStore(state => state.setInput);
+  const setDepth = useStore(state => state.setDepth);
 
   if (history.length === 0) return null;
 
@@ -37,11 +40,11 @@ export const History: React.FC = () => {
             className="flex flex-col gap-3 p-6 bg-white/[0.02] border border-white/10 rounded-xl text-left hover:bg-white/[0.05] transition-all group relative overflow-hidden"
           >
             <div className="flex justify-between items-start">
-              <span className="text-[9px] font-bold uppercase tracking-wider text-white/40">Tier 0{item.level} — {item.mode}</span>
+              <span className="text-[9px] font-bold uppercase tracking-wider text-[#a0a0a0]">Tier 0{item.level} — {item.mode}</span>
               <span className="text-[9px] opacity-20 font-mono">{new Date(item.timestamp).toLocaleDateString()}</span>
             </div>
             
-            <p className="text-sm text-white/60 line-clamp-2 font-serif italic">
+            <p className="text-sm text-[#a0a0a0] line-clamp-2 font-serif italic">
               {item.output}
             </p>
 
@@ -58,4 +61,4 @@ export const History: React.FC = () => {
       </div>
     </div>
   );
-};
+});

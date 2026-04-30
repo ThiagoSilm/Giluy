@@ -1,56 +1,58 @@
-import React from 'react';
+import React, { useRef, useEffect, memo } from 'react';
 import { useStore } from '../store/useStore';
 import { useProcess } from '../hooks/useProcess';
-import { Sparkles, Send, FileText } from 'lucide-react';
+import { Send, FileText } from 'lucide-react';
 import { cn } from '../lib/utils';
 
-export const InputBox: React.FC = () => {
-  const { input, setInput, state } = useStore();
+export const InputBox: React.FC = memo(() => {
+  const input = useStore(state => state.input);
+  const setInput = useStore(state => state.setInput);
+  const state = useStore(state => state.state);
   const { processText } = useProcess();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = '48px';
+      const scrollHeight = textareaRef.current.scrollHeight;
+      textareaRef.current.style.height = `${Math.min(scrollHeight, 200)}px`;
+    }
+  }, [input]);
 
   return (
-    <div className="relative group">
-      <div className="absolute -inset-0.5 bg-gradient-to-r from-white/10 to-transparent rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-      <div className="relative bg-[#0a0a0a] border border-white/10 rounded-xl overflow-hidden shadow-2xl">
-        <textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Inject text for revelation... Remove the ego. Find the signal."
-          className="w-full min-h-[200px] p-6 bg-transparent text-white placeholder:text-white/20 focus:outline-none resize-none font-sans leading-relaxed text-lg"
-          disabled={state === 'processing'}
-        />
+    <div className="flex flex-col w-full gap-4">
+      <textarea
+        ref={textareaRef}
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="Inject text for revelation... Remove the ego. Find the signal."
+        className="input-box custom-scrollbar leading-relaxed font-sans"
+        disabled={state === 'processing'}
+        tabIndex={1}
+        style={{ overflowY: input.length > 0 && textareaRef.current && textareaRef.current.scrollHeight > 200 ? 'auto' : 'hidden' }}
+      />
+      
+      <div className="flex justify-between items-center w-full max-w-[720px] mx-auto gap-4 flex-wrap sm:flex-nowrap">
+        <button tabIndex={2} className="text-[#888] hover:text-[#e0e0e0] transition-colors min-h-[48px] min-w-[48px] flex items-center justify-center rounded border border-transparent hover:border-[#333]" title="Upload Document">
+          <FileText size={18} />
+        </button>
         
-        <div className="border-t border-white/5 p-4 flex justify-between items-center bg-white/[0.02]">
-          <div className="flex gap-4">
-            <button className="text-white/40 hover:text-white transition-colors" title="Upload Document">
-              <FileText size={18} />
-            </button>
-          </div>
-          
-          <button
-            onClick={() => processText()}
-            disabled={state === 'processing' || !input.trim()}
-            className={cn(
-              "px-6 py-2 rounded-full flex items-center gap-2 text-xs uppercase tracking-widest transition-all duration-300",
-              state === 'processing' 
-                ? "bg-white/5 text-white/20 cursor-wait" 
-                : "bg-white text-black hover:bg-white/90 active:scale-95"
-            )}
-          >
-            {state === 'processing' ? (
-              <>
-                <div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                Processing
-              </>
-            ) : (
-              <>
-                <Send size={14} />
-                Execute
-              </>
-            )}
-          </button>
-        </div>
+        <button
+          onClick={() => processText()}
+          disabled={state === 'processing' || !input.trim()}
+          tabIndex={3}
+          className="btn-primary flex-1 sm:flex-none uppercase text-xs tracking-widest font-bold"
+        >
+          {state === 'processing' ? (
+            <div className="spinner !w-4 !h-4 !border-2 !border-t-[#e0e0e0]" style={{ borderRightColor: 'rgba(255,255,255,0.1)', borderBottomColor: 'rgba(255,255,255,0.1)', borderLeftColor: 'rgba(255,255,255,0.1)' }} />
+          ) : (
+            <>
+              <Send size={14} />
+              Execute
+            </>
+          )}
+        </button>
       </div>
     </div>
   );
-};
+});
