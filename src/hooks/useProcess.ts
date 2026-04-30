@@ -53,7 +53,7 @@ export function useProcess() {
       const inputSignal = calculateCoherence(textToProcess);
 
       // Execute offline inference via Worker
-      const resultData = await InferenceService.infer(textToProcess, depth);
+      const resultData = await InferenceService.infer(textToProcess);
 
       const output = resultData.text || "SIGNAL_LOSS: NO_CONTINUITY";
       const outputSignal = calculateCoherence(output);
