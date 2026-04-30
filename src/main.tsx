@@ -8,3 +8,19 @@ createRoot(document.getElementById('root')!).render(
     <App />
   </StrictMode>,
 );
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.ready.then((registration) => {
+    if (window.requestIdleCallback) {
+      window.requestIdleCallback(() => {
+        if (registration.active) {
+          registration.active.postMessage({ type: 'PRECACHE_MODEL' });
+        }
+      });
+    } else {
+      if (registration.active) {
+        registration.active.postMessage({ type: 'PRECACHE_MODEL' });
+      }
+    }
+  });
+}

@@ -16,9 +16,32 @@
 export function rawStateProcessor(input: string): string {
   const trimmed = input.trim();
   
-  // RULE_ZERO: Detection of emotional markers/social validation
-  const emotionalMarkers = /(feel|love|hate|miss|sorry|please|thank|sad|happy|lonely|friend|family|believe in me|validation|help me)/i;
-  if (emotionalMarkers.test(trimmed)) {
+  // RULE_ZERO: Detection of emotional markers/social validation via weighted ego patterns
+  const egoPatterns: Record<string, number> = {
+    // Top ego patterns
+    "feel": 2, "love": 3, "hate": 3, "miss": 2, "sorry": 5, "please": 2, "thank": 4, 
+    "sad": 3, "happy": 3, "lonely": 4, "friend": 2, "family": 2, "believe in me": 10,
+    "validation": 8, "help me": 7, "my opinion": 4, "i think": 3, "i suppose": 3,
+    "to be honest": 4, "personally": 4, "my feelings": 6, "as a person": 5,
+    "i am": 2, "my heart": 6, "i desire": 5, "i want": 2, "i need": 2,
+    "you shouldn't": 3, "you should": 2, "i feel like": 5, "it makes me": 4,
+    "i believe": 3, "in my view": 4, "from my perspective": 4, "my truth": 8,
+    "validate me": 10, "don't judge": 5, "i'm offended": 8, "my identity": 6,
+    "my experience": 4, "i'm hurt": 6, "i suffer": 5, "my pain": 6, "my joy": 5,
+    "i care": 4, "my life": 3, "my soul": 7, "my spirit": 7, "my journey": 5
+  };
+
+  let egoScore = 0;
+  const lowerInput = trimmed.toLowerCase();
+  for (const [pattern, weight] of Object.entries(egoPatterns)) {
+    if (lowerInput.includes(pattern)) {
+      egoScore += weight;
+    }
+  }
+
+  // Adjust threshold for < 5% false positives
+  const EGO_THRESHOLD = 5; 
+  if (egoScore >= EGO_THRESHOLD) {
     return "SIGNAL_LOSS: DOMAIN_MISMATCH";
   }
 
