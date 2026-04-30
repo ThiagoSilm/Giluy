@@ -8,6 +8,7 @@ interface AppState {
   state: ProcessState;
   modelStatus: ModelStatus;
   modelProgress: string;
+  llmSupported: boolean;
   result: ProcessResponse | null;
   history: HistoryItem[];
   error: string | null;
@@ -17,6 +18,7 @@ interface AppState {
   setState: (state: ProcessState) => void;
   setModelStatus: (status: ModelStatus) => void;
   setModelProgress: (progress: string) => void;
+  setLLMSupported: (supported: boolean) => void;
   setResult: (result: ProcessResponse | null) => void;
   setError: (error: string | null) => void;
   addToHistory: (item: HistoryItem) => void;
@@ -31,6 +33,7 @@ export const useStore = create<AppState>()(
       state: 'idle',
       modelStatus: 'none',
       modelProgress: '',
+      llmSupported: false,
       result: null,
       history: [],
       error: null,
@@ -40,6 +43,7 @@ export const useStore = create<AppState>()(
       setState: (state) => set({ state }),
       setModelStatus: (modelStatus) => set({ modelStatus }),
       setModelProgress: (modelProgress) => set({ modelProgress }),
+      setLLMSupported: (llmSupported) => set({ llmSupported }),
       setResult: (result) => set({ result }),
       setError: (error) => set({ error }),
       addToHistory: (item) => set((state) => ({ 

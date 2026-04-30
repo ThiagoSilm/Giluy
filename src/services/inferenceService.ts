@@ -30,6 +30,7 @@ export class InferenceService {
            useStore.getState().setModelProgress(e.data.payload.text);
         } else if (e.data.type === 'LOAD_DONE') {
           this.worker?.removeEventListener('message', handler);
+          useStore.getState().setLLMSupported(e.data.llmSupported);
           resolve();
         } else if (e.data.type === 'ERROR') {
           this.worker?.removeEventListener('message', handler);
@@ -52,7 +53,13 @@ export class InferenceService {
       const handler = (e: MessageEvent) => {
         if (e.data.type === 'INFER_DONE') {
           this.worker?.removeEventListener('message', handler);
-          resolve(e.data.result);
+          const result = e.data.result;
+          if (result.textBuffer) {
+            const textDecoder = new TextDecoder();
+            result.text = textDecoder.decode(result.textBuffer);
+            delete result.textBuffer;
+          }
+          resolve(result);
         } else if (e.data.type === 'ERROR') {
           this.worker?.removeEventListener('message', handler);
           reject(e.data.message);
@@ -60,10 +67,14 @@ export class InferenceService {
       };
 
       this.worker!.addEventListener('message', handler);
+      
+      const encoder = new TextEncoder();
+      const promptBuffer = encoder.encode(prompt).buffer;
+      
       this.worker!.postMessage({
         type: 'INFER',
-        payload: { prompt, level }
-      });
+        payload: { promptBuffer, level }
+      }, [promptBuffer]);
     });
   }
 }

@@ -48,6 +48,12 @@ export const CoherenceIndicator: React.FC = () => {
       </div>
 
       <div className="space-y-4">
+        <div className="flex flex-col gap-1 pb-2 border-b border-white/10">
+          <span className="text-[9px] uppercase tracking-widest opacity-40">Architecture</span>
+          <span className="text-xs font-mono text-amber-400">
+            {data.layer === 1 ? 'Layer 1: Logic Engine' : data.layer === 2 ? 'Layer 2: LLM Accelerator' : 'Core'}
+          </span>
+        </div>
         <MetricRow label="Transmission" value={data.transmission} />
         <MetricRow label="Amplitude" value={data.amplitude} />
         <MetricRow label="Connectivity" value={data.connectivity} />

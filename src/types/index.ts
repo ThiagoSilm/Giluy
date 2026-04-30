@@ -9,6 +9,7 @@ export interface CoherenceSignal {
   coherence: number;
   amplitude: number;
   dissipation: number;
+  layer?: 1 | 2;
 }
 
 export interface ProcessResponse {

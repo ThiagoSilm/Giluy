@@ -1,20 +1,26 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# גִּלּוּי (GILUY) / 100% Offline, Serverless Protocol
 
-# Run and deploy your AI Studio app
+Giluy is a pure logic engine designed for offline truth extraction and structure breaking.
 
-This contains everything you need to run your app locally.
+## Architecture: Dual-Layer
 
-View your app in AI Studio: https://ai.studio/apps/f9a09071-a415-4c1d-8e61-fd87e23f42db
+### Layer 1: The Logic Engine (Immortal Core)
+This layer is written in pure TypeScript and performs cold syntactic processing over text. 
+It enforces the protocol axioms entirely mathematically and syntactically.
+- Works offline
+- Zero dependencies on network or API
+- Works on phones, tablets, or very low-spec devices Without GPU (100MB+ RAM).
+- Responds deterministically.
 
-## Run Locally
+### Layer 2: LLM Hardware Accelerator (Optional)
+If WebGPU and sufficient hardware (4GB+ RAM) are detected, Giluy boots a local Gemma inference environment via WebLLM to refine Layer 1 output.
+- Streaming Weights via HTTP range requests.
+- Lazy Evaluation: Weights loaded per chunk, processed on GPU, unloaded immediately.
+- Context window scaling dynamically based on 40% logical RAM budget to avoid memory crashes.
 
-**Prerequisites:**  Node.js
+## Usage
+No backend is needed. It operates as a progressive web app (PWA) running workers in the background.
 
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Scripts
+- \`npm run dev\` - Development server
+- \`npm run build\` - Build for production (pure static files)

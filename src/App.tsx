@@ -15,7 +15,7 @@ import { cn } from './lib/utils';
 import { useProcess } from './hooks/useProcess';
 
 export default function App() {
-  const { error, modelStatus, modelProgress } = useStore();
+  const { error, modelStatus, modelProgress, llmSupported } = useStore();
   const { loadModel } = useProcess();
 
   return (
@@ -30,7 +30,7 @@ export default function App() {
              </h1>
              <p className="text-sm text-white/40 max-w-md leading-relaxed mt-2">
                גִּלּוּי (Giluy) is a protocol for truth extraction. 
-               Powered by WebLLM running Phi-3 locally with <span className="text-white/60 underline decoration-white/10">TurboQuant-JS</span> for zero-latency offline inference.
+               Powered by a purely deterministic Logic Engine (Layer 1) with optional WebLLM Gemma hardware acceleration (Layer 2) locally with <span className="text-white/60 underline decoration-white/10">TurboQuant-JS</span> zero-latency caching. 100% offline.
              </p>
           </div>
 
@@ -41,15 +41,17 @@ export default function App() {
               modelStatus === 'loading' ? "bg-amber-500/10 border-amber-500/20 text-amber-400" :
               "bg-white/5 border-white/10 text-white/40"
             )}>
-              <div className="flex items-center gap-2">
-                {modelStatus === 'ready' ? <CheckCircle size={12} /> :
-                 modelStatus === 'loading' ? <Loader2 size={12} className="animate-spin min-w-3" /> :
-                 <Cpu size={12} />}
-                <span className="text-[10px] uppercase tracking-widest font-bold">
-                  {modelStatus === 'ready' ? 'System Offline: Ready' : 
-                   modelStatus === 'loading' ? 'Loading Local Model...' : 
-                   'Local LLM: Idle'}
-                </span>
+              <div className="flex flex-col items-start gap-1">
+                <div className="flex items-center gap-2">
+                  {modelStatus === 'ready' ? <CheckCircle size={12} /> :
+                   modelStatus === 'loading' ? <Loader2 size={12} className="animate-spin min-w-3" /> :
+                   <Cpu size={12} />}
+                  <span className="text-[10px] uppercase tracking-widest font-bold">
+                    {modelStatus === 'ready' ? `Core Logic: Online${llmSupported ? ' | LLM Accelerator: Online' : ' | LLM: Offline'}` : 
+                     modelStatus === 'loading' ? 'Initializing Core Logic...' : 
+                     'System: Offline'}
+                  </span>
+                </div>
               </div>
               {modelStatus === 'loading' && modelProgress && (
                 <span className="text-[9px] text-amber-400/60 leading-tight block ml-5">
