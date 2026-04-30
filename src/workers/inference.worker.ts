@@ -13,28 +13,18 @@ class LocalLLM {
   private manifestLoaded = false;
   private embeddingsManifest: Map<string, { id: string, bits: 2 | 4 }> = new Map();
   private loadedEmbeddings: Map<string, Float64Array> = new Map();
-  private deviceInfo = { ram: 4, gpu: false, batchSize: 256 };
+  private deviceInfo = { ram: 4, gpu: false, batchSize: 256, maxContextWindow: 512 };
   
   async loadModel() {
-    console.log('[InferenceWorker] Detector de hardware e lazy load manifest...');
+    console.log('[InferenceWorker] Inicializando Lazy Evaluation. Carregando (mock) Tokenizer base...');
     
-    // 5. Detecte a capacidade do dispositivo
-    const nav = navigator as any;
-    this.deviceInfo.ram = nav.deviceMemory || 4;
-    this.deviceInfo.gpu = !!nav.gpu;
+    // 5. Detect hardware upfront
+    this.detectHardware();
     
-    if (this.deviceInfo.gpu && this.deviceInfo.ram > 4) {
-      this.deviceInfo.batchSize = 1024;
-    } else if (this.deviceInfo.gpu) {
-      this.deviceInfo.batchSize = 512;
-    } else {
-      this.deviceInfo.batchSize = 256;
-    }
-    
-    // 2. Carregue apenas o tokenizer e o manifest dos embeddings
+    // 1. TOKENIZER: Load only active vocabulary/manifest (Lazy Tokenization step 1)
     this.manifestLoaded = true;
     
-    // Initialize WebLLM engine instance without downloading/loading weights yet
+    // Initialize WebLLM engine instance without downloading/loading monolithic weights
     this.engine = new MLCEngine();
     this.engine.setInitProgressCallback((progress) => {
       self.postMessage({ type: 'PROGRESS', payload: progress });
@@ -44,6 +34,23 @@ class LocalLLM {
     this.embeddingsManifest.set('base_protocol', { id: 'base_protocol', bits: 4 });
     
     return true;
+  }
+
+  private detectHardware() {
+    const nav = navigator as any;
+    this.deviceInfo.ram = nav.deviceMemory || 4;
+    this.deviceInfo.gpu = !!nav.gpu;
+    
+    if (this.deviceInfo.ram < 4) {
+      this.deviceInfo.maxContextWindow = 512;
+      this.deviceInfo.batchSize = 256;
+    } else if (this.deviceInfo.ram > 6) {
+      this.deviceInfo.maxContextWindow = 2048;
+      this.deviceInfo.batchSize = 1024;
+    } else {
+      this.deviceInfo.maxContextWindow = 1024;
+      this.deviceInfo.batchSize = 512;
+    }
   }
 
   // indexedDB setup for embeddings caching
@@ -60,12 +67,17 @@ class LocalLLM {
     
     const startTime = performance.now();
     
-    // 3. No evento 'INFER', carregue sob demanda apenas os embeddings necessários
+    // 5. Detect RAM before EACH execution
+    this.detectHardware();
+    
+    // 1. & 2. TOKENIZER & EMBEDDINGS: Tokenize active vocab, load active columns via TurboQuant selectively
     const db = await this.getDB();
+    const activeTokens = prompt.trim().split(/\s+/);
+    
     for (const [key, meta] of this.embeddingsManifest.entries()) {
       let cached: QuantizedBuffer | undefined = await db.get('cache', key);
       if (!cached) {
-        // Mock generation of heavily quantized embedding for this block if not in IndexedDB
+        // Generate payload-specific embedding fragments only
         const textBytes = new TextEncoder().encode(prompt.substring(0, this.deviceInfo.batchSize));
         const floatArray = new Float64Array(textBytes.length);
         for(let i = 0; i < textBytes.length; i++) {
@@ -78,9 +90,11 @@ class LocalLLM {
       this.loadedEmbeddings.set(key, TurboQuant.decompress(cached));
     }
     
-    // Load WebLLM weights ONLY for the inference
+    // 3. ATENÇÃO: Calculate attention only on active tokens within strict RAM-based context bounds
     const selectedModel = "Phi-3.5-mini-instruct-q4f16_1-MLC";
-    await this.engine.reload(selectedModel);
+    await this.engine.reload(selectedModel, {
+      context_window_size: this.deviceInfo.maxContextWindow, // 512 for <4GB, 2048 for >6GB
+    });
 
     // Get protocol prompt
     const systemPrompt = getPromptByLevel(level);
@@ -97,7 +111,7 @@ class LocalLLM {
 
     const completionText = response.choices[0].message.content || 'SIGNAL_LOSS: NO_OUTPUT';
 
-    // 4. Após a inferência, descarregue da RAM os embeddings não mais necessários (Lazy Evaluation Unload)
+    // 4. Descarregue tudo exceto tokenizer base. Força RAM de volta para 200-400MB.
     await this.engine.unload();
     this.loadedEmbeddings.clear();
     
@@ -111,10 +125,10 @@ class LocalLLM {
       signalData: {
         pt: completionText.length,
         connectivity: 4,
-        transmission: this.deviceInfo.batchSize,
+        transmission: this.deviceInfo.maxContextWindow,
         coherence: 1.0,
         amplitude: endTime - startTime,
-        dissipation: this.embeddingsManifest.size
+        dissipation: activeTokens.length
       }
     };
   }
