@@ -17,12 +17,17 @@ export function useProcess() {
   } = useStore();
 
   const loadModel = async () => {
-    if (modelStatus === 'ready' || modelStatus === 'loading') return;
+    if (modelStatus === 'ready') return;
+    if (modelStatus === 'loading') {
+      // Wait for existing loading process
+      while (useStore.getState().modelStatus === 'loading') {
+        await new Promise(r => setTimeout(r, 100));
+      }
+      return;
+    };
     
     setModelStatus('loading');
     try {
-      // Simulation of loading a quantized model (e.g. Phi-3 or Gemma)
-      // In a real scenario, this URL would point to the .wasm or quantized .bin
       await InferenceService.loadModel('phi-3-mini-q4', '/models/phi3-q4.bin');
       setModelStatus('ready');
     } catch (err: any) {

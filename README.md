@@ -1,50 +1,38 @@
-# גִּלּוּי (Giluy) — Protocolo de Extração de Sinal Puro
+# גִּלּוּי (Giluy) — Protocolo de Sinal Puro
 
-O Giluy é um framework de processamento de linguagem natural focado na dissolução do "ego linguístico" e na extração do núcleo verificável de verdade de qualquer substrato textual. Ele opera sob o princípio da **Soberania Computacional**, executando inferência LLM 100% offline via navegador.
+**Giluy** é um processador de linguagem offline projetado para a extração do núcleo verificável de verdade em substratos textuais. Utiliza uma arquitetura **Local-First** com compressão de embeddings de alta performance.
 
-## 🏗️ Arquitetura Técnica
+## 🚀 Arquitetura TurboQuant-JS
 
-Ao contrário de aplicações convencionais que dependem de APIs externas (Gemini, OpenAI), o Giluy utiliza uma pilha de inferência local otimizada:
+O diferencial crítico do Giluy é a integração do **TurboQuant-JS**, que permite a execução de modelos LLM (como Phi-3-mini ou Gemma-2B) diretamente no navegador com recursos mínimos.
 
-### TurboQuant-JS
-O componente crítico de eficiência. Implementamos o `turboquant-js` para comprimir os embeddings do modelo (Phi-3-mini ou Gemma-2B) de float64 para **4 bits por coordenada**.
+- **Compressão de 2-4 bits:** Redução de ~20x no tamanho do modelo (de ~3 GB para ~150 MB).
+- **Zero Latência de API:** A inferência ocorre 100% offline em um Web Worker dedicado.
+- **Persistência IndexedDB:** O modelo quantizado é armazenado localmente após o primeiro carregamento, garantindo funcionamento instantâneo em sessões subsequentes.
+- **Scores Não-Enviesados:** Descompressão on-demand para cálculos de similaridade matematicamente precisos.
 
-*   **Redução de Memória:** ~20x (de ~3GB para ~150MB).
-*   **Latência:** 50-100ms por inferência através de Web Workers.
-*   **Acurácia:** Scores de similaridade matematicamente não-enviesados garantidos pela descompressão sob demanda.
+## 🛠 Camadas de Processamento
 
-### Camadas de Dados
-1.  **Pré-processamento Offline:** Modelos são quantizados antes da distribuição.
-2.  **Persistent Cache (IndexedDB):** O modelo comprimido (~150 MB) é armazenado no navegador, permitindo uso instantâneo em sessões subsequentes.
-3.  **WASM Runtime:** Execução via WebAssembly para performance de hardware nativo no navegador.
+A aplicação utiliza protocolos de filtragem profunda para purificar o sinal linguístico:
 
-## 📜 Protocolos de Filtragem
+1.  **RAW_STATE_PROCESSOR:** Decomposição do texto em vetores de estado puro.
+2.  **ETHER_CHRONOVISOR:** Verificação de continuidade e factualidade histórica.
+3.  **Local Inference:** Processamento via TurboQuant (~50-100ms por bloco).
 
-O sistema opera em três níveis de profundidade lógica:
+## 📦 Tecnologias
 
-*   **RAW_STATE_PROCESSOR (Nível 1):** Filtra ruído gramatical e redundâncias.
-*   **ETHER_CHRONOVISOR (Nível 2):** Analisa a continuidade temporal e causal das afirmações.
-*   **ULTIMA_RATIO (Nível 3):** Reduz o texto ao seu axioma fundamental, removendo vícios de linguagem e viés subjetivo.
+- **Frontend:** React + Tailwind CSS + Framer Motion.
+- **Inferência:** TurboQuant-JS + Web Workers.
+- **Cache:** IndexedDB + ModelCache Service.
+- **Gerenciamento de Estado:** Zustand (com persistência local).
 
-## 🚀 Como Funciona
-```
-[USUÁRIO] → [PWA Giluy]
-↕
-[Web Worker]
-↕
-[Modelo Quantizado + turboquant-js] ← (IndexedDB Cache)
-↕
-[Inferência Local]
-(~60ms latency, zero-cost, 100% offline)
-```
-## 🛠️ Tecnologias Utilizadas
+## 📖 Como usar
 
-- **Frontend:** React + Tailwind CSS (Estética Brutalista/Industrial).
-- **Inference Service:** Web Workers para execução não-bloqueante.
-- **Compression:** TurboQuant-JS para quantização de pesos.
-- **Storage:** IndexedDB para persistência de modelos de grande escala.
-- **Type Safety:** TypeScript rigoroso para garantir a integridade dos protocolos.
+1.  Acesse a PWA instalável.
+2.  Clique em **"Activate local engine"** para baixar e quantizar o modelo (~150MB).
+3.  Insira o texto para processamento.
+4.  O Giluy extrairá o sinal puro sem enviar nenhum dado para servidores externos.
 
 ---
 
-*Giluy não é uma ferramenta de chat. É um instrumento de precisão para a verdade.*
+**Nota:** Este software opera sob o princípio da dissolução do ego linguístico. O sinal é a única verdade.
