@@ -57,16 +57,62 @@ export class ColdLogicProcessor {
     }
 
     const filtered = this.filterNoise(text);
-    // Mimic the "Cold Logic" transformer-like extraction
-    // In a real scenario, this would call ONNX
-    const signal = filtered.split('.')
-      .map(s => s.trim())
-      .filter(s => s.length > 10 && !/(\?|!)/.test(s)) // Facts usually don't have emojis or exclamation marks
+    const sentences = filtered.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 0);
+    
+    // Check for computable questions
+    const questionMatch = text.match(/([^.!?]+\?)/);
+    const isBinary = questionMatch && /^(is|can|should|will|does|do|was|were|has|have|could)\b/i.test(questionMatch[1].trim());
+
+    if (questionMatch) {
+      // Find answer in text
+      const questionText = questionMatch[1].trim().toLowerCase();
+      const factualSentences = sentences.filter(s => !s.includes('?'));
+      
+      if (isBinary) {
+        // Logic for binary extraction
+        // Simplified: if keywords from question appear in factual sentences, assume YES
+        const keywords = questionText.replace(/[?]/g, '').split(' ').filter(w => w.length > 3);
+        const sourceLine = factualSentences.find(s => keywords.some(k => s.toLowerCase().includes(k)));
+        
+        if (sourceLine) {
+          return {
+            text: `YES. SOURCE: "${sourceLine}"`,
+            coherence: 0.95,
+            level: FiltrationLevel.RAW_STATE_PROCESSOR,
+            latency: performance.now() - start,
+          };
+        } else {
+           return {
+            text: `NO. SOURCE: "Information deficit in corpus."`,
+            coherence: 0.85,
+            level: FiltrationLevel.RAW_STATE_PROCESSOR,
+            latency: performance.now() - start,
+          };
+        }
+      } else {
+        // Direct extraction for non-binary questions
+        const keywords = questionText.replace(/[?]/g, '').split(' ').filter(w => w.length > 3);
+        const directAnswer = factualSentences.find(s => keywords.some(k => s.toLowerCase().includes(k)));
+        
+        if (directAnswer) {
+          return {
+            text: directAnswer,
+            coherence: 0.9,
+            level: FiltrationLevel.RAW_STATE_PROCESSOR,
+            latency: performance.now() - start,
+          };
+        }
+      }
+    }
+
+    // Default factual signal extraction if no specific question found
+    const signal = sentences
+      .filter(s => s.length > 10 && !/(\?|!)/.test(s)) 
       .join('. ');
 
     if (signal.length < 5) {
       return {
-        text: "SIGNAL_LOSS: Insufficient verifiable content.",
+        text: "SIGNAL_LOSS: No computable question or verifiable fact detected.",
         coherence: 0,
         level: FiltrationLevel.RAW_STATE_PROCESSOR,
         latency: performance.now() - start,
@@ -75,7 +121,7 @@ export class ColdLogicProcessor {
 
     return {
       text: signal,
-      coherence: this.calculateCoherence(signal) + 0.1, // Processor increases signal
+      coherence: this.calculateCoherence(signal) + 0.1,
       level: FiltrationLevel.RAW_STATE_PROCESSOR,
       latency: performance.now() - start,
     };
