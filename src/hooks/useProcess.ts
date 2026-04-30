@@ -12,6 +12,7 @@ export function useProcess() {
     setError, 
     addToHistory, 
     input: storeInput,
+    coords,
     modelStatus,
     setModelStatus
   } = useStore();
@@ -46,7 +47,7 @@ export function useProcess() {
     try {
       const inputSignal = calculateCoherence(textToProcess);
 
-      const resultData = await InferenceService.infer(textToProcess, depth);
+      const resultData = await InferenceService.infer(textToProcess, depth, coords);
 
       const output = resultData.text || "SIGNAL_LOSS: NO_CONTINUITY";
       const outputSignal = calculateCoherence(output);

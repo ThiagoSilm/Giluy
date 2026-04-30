@@ -111,50 +111,67 @@ class InferenceEngine {
     return { llmSupported: this.canRunAcc };
   }
 
-  async infer(prompt: string, level: 1 | 2 | 3) {
+  async infer(prompt: string, level: 1 | 2 | 3, coords?: string) {
     const startTime = performance.now();
-    
     const sanitizedPrompt = sanitizePrompt(prompt);
-
+    
     let classificationResult: 'SINAL_PURO' | 'DOMAIN_MISMATCH' | 'SIGNAL_LOSS' | 'RESONANCE_LOSS' = 'SINAL_PURO';
     let activeLayer = 1;
+    let dbResult = null;
 
-    try {
-      if (this.activeBackend) {
-         classificationResult = await this.activeBackend.infer(sanitizedPrompt);
-         activeLayer = this.canRunAcc ? 2 : 1;
+    if (level === 2 || level === 3) {
+      try {
+        if (this.activeBackend) {
+          classificationResult = await this.activeBackend.infer(level === 3 ? coords || '' : sanitizedPrompt);
+          activeLayer = this.canRunAcc ? 2 : 1;
+        }
+      } catch (e) {
+        classificationResult = 'SIGNAL_LOSS';
       }
-    } catch (e) {
-      classificationResult = 'SIGNAL_LOSS';
+    }
+
+    if (level === 3 && classificationResult === 'SINAL_PURO') {
+      try {
+        const db = await openDB('giluy-chronovisor', 1, {
+          upgrade(db) {
+            db.createObjectStore('events', { keyPath: 'coords' });
+          },
+        });
+        dbResult = await db.get('events', coords || '');
+        if (!dbResult) {
+          // Mock some events if the DB is empty for demo purposes
+          if (coords?.toLowerCase().includes('lucas')) {
+             dbResult = { coords, event: 'Crucifixion', sensory: 'Smell of iron, heavy darkness, 3 PM' };
+          } else if (coords?.toLowerCase().includes('roswell')) {
+             dbResult = { coords, event: 'Impact', sensory: 'Ozone smell, metallic debris, high heat' };
+          }
+        }
+      } catch (e) {
+        classificationResult = 'RESONANCE_LOSS';
+      }
     }
     
-    // Se SINAL_PURO, o texto filtrado é o input com ruído removido via lógica fria.
-    // Caso contrário, output is just the classification.
-    let finalPayload = classificationResult as string;
+    let resultData = { text: classificationResult as string, pt: 0 };
     
     if (classificationResult === 'SINAL_PURO') {
-        const cleaned = applyLogicLayer(prompt, level);
-        if (cleaned.startsWith('SIGNAL_LOSS') || cleaned.startsWith('RESONANCE_LOSS')) {
-            finalPayload = cleaned;
-        } else {
-            finalPayload = cleaned;
-        }
+        const logicResult = applyLogicLayer(prompt, level, coords, dbResult);
+        resultData = logicResult;
     }
 
     const endTime = performance.now();
     const id = Date.now().toString();
     
     return {
-      text: finalPayload,
+      text: resultData.text,
       latency: endTime - startTime,
       embeddingId: id,
       signalData: {
-        pt: finalPayload.length,
-        connectivity: 1,
-        transmission: activeLayer === 2 ? 4 : 1, // 4 layers
-        coherence: 1.0,
+        pt: resultData.pt,
+        connectivity: level,
+        transmission: activeLayer === 2 ? 4 : 1,
+        coherence: resultData.pt / 100,
         amplitude: endTime - startTime,
-        dissipation: 0
+        dissipation: 100 - resultData.pt
       },
       layer: activeLayer
     };
@@ -173,10 +190,10 @@ self.onmessage = async (e: MessageEvent<InferenceRequest>) => {
         break;
       case 'INFER':
         const decoder = new TextDecoder();
-        const promptString = decoder.decode(payload.promptBuffer);
-        const result = await llm.infer(promptString, payload.level || 1);
-        
         const encoder = new TextEncoder();
+        const promptString = decoder.decode(payload.promptBuffer);
+        const result = await llm.infer(promptString, payload.level || 1, payload.coords);
+        
         const textBuffer = encoder.encode(result.text).buffer;
         
         const resultPayload: any = { ...result, textBuffer };

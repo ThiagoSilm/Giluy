@@ -8,6 +8,9 @@ export const InputBox: React.FC = memo(() => {
   const input = useStore(state => state.input);
   const setInput = useStore(state => state.setInput);
   const state = useStore(state => state.state);
+  const depth = useStore(state => state.depth);
+  const coords = useStore(state => state.coords);
+  const setCoords = useStore(state => state.setCoords);
   const { processText } = useProcess();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -31,6 +34,20 @@ export const InputBox: React.FC = memo(() => {
         tabIndex={1}
         style={{ overflowY: input.length > 0 && textareaRef.current && textareaRef.current.scrollHeight > 200 ? 'auto' : 'hidden' }}
       />
+
+      {depth === 3 && (
+        <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
+           <span className="text-[10px] uppercase tracking-widest text-[#a0a0a0] ml-1">Coordenadas Temporais/Espaciais</span>
+           <input 
+              type="text"
+              value={coords}
+              onChange={(e) => setCoords(e.target.value)}
+              placeholder="Lucas 23:44-46 ou Roswell, 4 julho 1947"
+              className="input-box"
+              tabIndex={2}
+           />
+        </div>
+      )}
       
       <div className="flex justify-between items-center w-full max-w-[720px] mx-auto gap-4 flex-wrap sm:flex-nowrap">
         <button tabIndex={2} className="text-[#888] hover:text-[#e0e0e0] transition-colors min-h-[48px] min-w-[48px] flex items-center justify-center rounded border border-transparent hover:border-[#333]" title="Upload Document">

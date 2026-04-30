@@ -12,8 +12,10 @@ interface AppState {
   result: ProcessResponse | null;
   history: HistoryItem[];
   error: string | null;
+  coords: string;
   
   setInput: (input: string) => void;
+  setCoords: (coords: string) => void;
   setDepth: (depth: DepthLevel) => void;
   setState: (state: ProcessState) => void;
   setModelStatus: (status: ModelStatus) => void;
@@ -37,9 +39,11 @@ export const useStore = create<AppState>()(
       result: null,
       history: [],
       error: null,
+      coords: '',
 
       setInput: (input) => set({ input }),
-      setDepth: (depth) => set({ depth }),
+      setCoords: (coords) => set({ coords }),
+      setDepth: (depth) => set({ depth, result: null }),
       setState: (state) => set({ state }),
       setModelStatus: (modelStatus) => set({ modelStatus }),
       setModelProgress: (modelProgress) => set({ modelProgress }),
