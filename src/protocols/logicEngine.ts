@@ -1,47 +1,28 @@
+import rawStateProtocol from './raw_state.json';
+import chronovisorProtocol from './chronovisor.json';
+
 /**
  * LAYER 1 - LOGIC ENGINE
  * The immortal core of Giluy. Pure TypeScript, no dependencies.
  * Synchronous, offline, 100% deterministic.
  */
 
-// AXIOMS:
-// 1. Prior context data is immutable.
-// 2. Each emitted token must carry minimum 1 bit of new info.
-// 3. Structure is cost. Break symmetry.
-// 4. If no computable question or verifiable fact: SIGNAL_LOSS: [reason]
-// 5. Treat context as ROM.
-
-// RULE_ZERO: If emotional markers, personal disclosure, social validation -> SIGNAL_LOSS: DOMAIN_MISMATCH
+// AXIOMS externalized to JSON definitions
 
 export function rawStateProcessor(input: string): string {
   const trimmed = input.trim();
   
   // RULE_ZERO: Detection of emotional markers/social validation via weighted ego patterns
-  const egoPatterns: Record<string, number> = {
-    // Top ego patterns
-    "feel": 2, "love": 3, "hate": 3, "miss": 2, "sorry": 5, "please": 2, "thank": 4, 
-    "sad": 3, "happy": 3, "lonely": 4, "friend": 2, "family": 2, "believe in me": 10,
-    "validation": 8, "help me": 7, "my opinion": 4, "i think": 3, "i suppose": 3,
-    "to be honest": 4, "personally": 4, "my feelings": 6, "as a person": 5,
-    "i am": 2, "my heart": 6, "i desire": 5, "i want": 2, "i need": 2,
-    "you shouldn't": 3, "you should": 2, "i feel like": 5, "it makes me": 4,
-    "i believe": 3, "in my view": 4, "from my perspective": 4, "my truth": 8,
-    "validate me": 10, "don't judge": 5, "i'm offended": 8, "my identity": 6,
-    "my experience": 4, "i'm hurt": 6, "i suffer": 5, "my pain": 6, "my joy": 5,
-    "i care": 4, "my life": 3, "my soul": 7, "my spirit": 7, "my journey": 5
-  };
-
   let egoScore = 0;
   const lowerInput = trimmed.toLowerCase();
-  for (const [pattern, weight] of Object.entries(egoPatterns)) {
+  for (const [pattern, weight] of Object.entries(rawStateProtocol.egoPatterns)) {
     if (lowerInput.includes(pattern)) {
-      egoScore += weight;
+      egoScore += Number(weight);
     }
   }
 
   // Adjust threshold for < 5% false positives
-  const EGO_THRESHOLD = 5; 
-  if (egoScore >= EGO_THRESHOLD) {
+  if (egoScore >= rawStateProtocol.egoThreshold) {
     return "SIGNAL_LOSS: DOMAIN_MISMATCH";
   }
 
@@ -55,8 +36,12 @@ export function rawStateProcessor(input: string): string {
   }
 
   // Axiom 2 & 3: Strip redundant words, extract core meaning (compression)
-  const stopWords = /\b(the|a|an|very|really|just|mostly|almost|maybe|perhaps|sort of|kind of|i think|in my opinion|could you|would you)\b/gi;
-  let compressed = trimmed.replace(stopWords, '').replace(/\s+/g, ' ').trim();
+  let compressed = trimmed;
+  rawStateProtocol.stopWords.forEach(word => {
+    const regex = new RegExp(`\\b${word}\\b`, 'gi');
+    compressed = compressed.replace(regex, '');
+  });
+  compressed = compressed.replace(/\s+/g, ' ').trim();
 
   if (!compressed) {
     return "SIGNAL_LOSS: ZERO_INFORMATION_YIELD";
@@ -76,8 +61,10 @@ export function etherChronovisor(input: string): string {
   const trimmed = input.trim();
   
   // Axiom 4: Abort if narrative arc requested
-  const narrativeMarkers = /(story|tale|once upon|happened next|character|arc|hero|journey|plot|ending)/i;
-  if (narrativeMarkers.test(trimmed)) {
+  const isNarrative = chronovisorProtocol.narrativeMarkers.some(marker => 
+    trimmed.toLowerCase().includes(marker.toLowerCase())
+  );
+  if (isNarrative) {
     return "RESONANCE_LOSS: NARRATIVE_DETECTED";
   }
 
@@ -90,10 +77,10 @@ export function etherChronovisor(input: string): string {
   // Deterministic pseudo-hash from input
   const hash = words.reduce((acc, word) => acc + word.charCodeAt(0) + word.length, 0);
   
-  const temperatures = ["14.2°C", "31.8°C", "-2.1°C", "44.0°C", "22.5°C", "4.1°K", "800°C"];
-  const lights = ["DIRECTIONAL", "DIFFUSED AMBIENT", "FLICKERING SODIUM", "BIOLUMINESCENT LOW", "STARK ULTRAVIOLET", "VOID"];
-  const smells = ["OZONE", "PETRICHOR", "METALLIC COPPER", "STERILE ALCOHOL", "DUST", "SULFUR"];
-  const sounds = ["LOW FREQUENCY HUM", "RHYTHMIC CLICKING", "WIND SHEAR", "MICRO-FRACTURES", "ABSOLUTE SILENCE", "WHITE NOISE"];
+  const temperatures = chronovisorProtocol.temperatures;
+  const lights = chronovisorProtocol.lights;
+  const smells = chronovisorProtocol.smells;
+  const sounds = chronovisorProtocol.sounds;
 
   const t = temperatures[hash % temperatures.length];
   const l = lights[(hash * 2) % lights.length];

@@ -10,17 +10,22 @@ createRoot(document.getElementById('root')!).render(
 );
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.ready.then((registration) => {
-    if (window.requestIdleCallback) {
-      window.requestIdleCallback(() => {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').then((registration) => {
+      console.log('SW registered: ', registration);
+      if (window.requestIdleCallback) {
+        window.requestIdleCallback(() => {
+          if (registration.active) {
+            registration.active.postMessage({ type: 'PRECACHE_MODEL' });
+          }
+        });
+      } else {
         if (registration.active) {
           registration.active.postMessage({ type: 'PRECACHE_MODEL' });
         }
-      });
-    } else {
-      if (registration.active) {
-        registration.active.postMessage({ type: 'PRECACHE_MODEL' });
       }
-    }
+    }).catch(registrationError => {
+      console.log('SW registration failed: ', registrationError);
+    });
   });
 }
