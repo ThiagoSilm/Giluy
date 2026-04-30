@@ -30,7 +30,7 @@ export default function App() {
              </h1>
              <p className="text-sm text-white/40 max-w-md leading-relaxed mt-2">
                גִּלּוּי (Giluy) is a protocol for truth extraction. 
-               Powered by a purely deterministic Logic Engine (Layer 1) with optional WebLLM Gemma hardware acceleration (Layer 2) locally with <span className="text-white/60 underline decoration-white/10">TurboQuant-JS</span> zero-latency caching. 100% offline.
+               Powered by a purely deterministic Logic Engine (Layer 1) with optional <span className="text-white/60 underline decoration-white/10">ONNX-based Surgical Classifiers</span> (Layer 2) locally. 100% offline.
              </p>
           </div>
 
