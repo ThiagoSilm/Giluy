@@ -1,4 +1,4 @@
-import { ModelCache } from './modelCache';
+import { useStore } from '../store/useStore';
 
 export class InferenceService {
   private static worker: Worker | null = null;
@@ -19,43 +19,16 @@ export class InferenceService {
   static async loadModel(modelId: string, modelUrl: string): Promise<void> {
     await this.init();
 
-    // 1. Try to load from cache
-    let modelEntry = await ModelCache.getModel(modelId);
+    // The worker now dynamically loads the phi-3.5 model using WebLLM which caches 
+    // it directly via Origin Private File System/IndexedDB, thus no manual mock is needed.
 
-    if (!modelEntry) {
-      console.log('[InferenceService] Model not in cache. Downloading/Generating...');
-      
-      let buffer: ArrayBuffer;
-      try {
-        const response = await fetch(modelUrl);
-        if (!response.ok) throw new Error('Not found');
-        buffer = await response.arrayBuffer();
-      } catch (e) {
-        console.warn(`[InferenceService] Target URL ${modelUrl} not found. Simulating valid model data...`);
-        // Simulate a ~150MB buffer (or smaller for the demo to be fast)
-        buffer = new ArrayBuffer(1024 * 1024 * 5); // 5MB simulated model
-      }
-      
-      modelEntry = {
-        id: modelId,
-        data: buffer,
-        version: '1.0',
-        quantizationBits: 4,
-        timestamp: Date.now()
-      };
-
-      // 3. Save to cache
-      await ModelCache.saveModel(modelEntry);
-    } else {
-      console.log('[InferenceService] Model loaded from IndexedDB cache');
-    }
-
-    // 4. Send to worker
     return new Promise((resolve, reject) => {
       if (!this.worker) return reject('Worker not initialized');
 
       const handler = (e: MessageEvent) => {
-        if (e.data.type === 'LOAD_DONE') {
+        if (e.data.type === 'PROGRESS') {
+           useStore.getState().setModelProgress(e.data.payload.text);
+        } else if (e.data.type === 'LOAD_DONE') {
           this.worker?.removeEventListener('message', handler);
           resolve();
         } else if (e.data.type === 'ERROR') {
@@ -67,12 +40,12 @@ export class InferenceService {
       this.worker.addEventListener('message', handler);
       this.worker.postMessage({
         type: 'LOAD',
-        payload: { data: modelEntry!.data }
+        payload: {}
       });
     });
   }
 
-  static async infer(prompt: string): Promise<any> {
+  static async infer(prompt: string, level: 1 | 2 | 3): Promise<any> {
     if (!this.worker) throw new Error('Inference worker not initialized');
 
     return new Promise((resolve, reject) => {
@@ -89,8 +62,10 @@ export class InferenceService {
       this.worker!.addEventListener('message', handler);
       this.worker!.postMessage({
         type: 'INFER',
-        payload: { prompt }
+        payload: { prompt, level }
       });
     });
   }
 }
+
+

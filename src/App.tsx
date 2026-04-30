@@ -15,7 +15,7 @@ import { cn } from './lib/utils';
 import { useProcess } from './hooks/useProcess';
 
 export default function App() {
-  const { error, modelStatus } = useStore();
+  const { error, modelStatus, modelProgress } = useStore();
   const { loadModel } = useProcess();
 
   return (
@@ -30,25 +30,32 @@ export default function App() {
              </h1>
              <p className="text-sm text-white/40 max-w-md leading-relaxed mt-2">
                גִּלּוּי (Giluy) is a protocol for truth extraction. 
-               Powered by <span className="text-white/60 underline decoration-white/10">TurboQuant-JS</span> for zero-latency offline inference.
+               Powered by WebLLM running Phi-3 locally with <span className="text-white/60 underline decoration-white/10">TurboQuant-JS</span> for zero-latency offline inference.
              </p>
           </div>
 
           <div className="ml-auto flex flex-col items-end gap-2">
             <div className={cn(
-              "px-3 py-1.5 rounded-full border flex items-center gap-2 transition-all duration-500",
+              "max-w-xs px-3 py-1.5 rounded-full border flex flex-col items-start gap-1 transition-all duration-500",
               modelStatus === 'ready' ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" :
               modelStatus === 'loading' ? "bg-amber-500/10 border-amber-500/20 text-amber-400" :
               "bg-white/5 border-white/10 text-white/40"
             )}>
-              {modelStatus === 'ready' ? <CheckCircle size={12} /> :
-               modelStatus === 'loading' ? <Loader2 size={12} className="animate-spin" /> :
-               <Cpu size={12} />}
-              <span className="text-[10px] uppercase tracking-widest font-bold">
-                {modelStatus === 'ready' ? 'System Offline: Ready' : 
-                 modelStatus === 'loading' ? 'Quantizing Weights...' : 
-                 'Local LLM: Idle'}
-              </span>
+              <div className="flex items-center gap-2">
+                {modelStatus === 'ready' ? <CheckCircle size={12} /> :
+                 modelStatus === 'loading' ? <Loader2 size={12} className="animate-spin min-w-3" /> :
+                 <Cpu size={12} />}
+                <span className="text-[10px] uppercase tracking-widest font-bold">
+                  {modelStatus === 'ready' ? 'System Offline: Ready' : 
+                   modelStatus === 'loading' ? 'Loading Local Model...' : 
+                   'Local LLM: Idle'}
+                </span>
+              </div>
+              {modelStatus === 'loading' && modelProgress && (
+                <span className="text-[9px] text-amber-400/60 leading-tight block ml-5">
+                  {modelProgress}
+                </span>
+              )}
             </div>
             
             {modelStatus === 'none' && (
@@ -57,11 +64,12 @@ export default function App() {
                 className="text-[10px] uppercase tracking-widest flex items-center gap-1.5 px-3 py-1 bg-white/10 hover:bg-white/20 rounded-lg transition-colors border border-white/5"
               >
                 <Download size={10} />
-                Activate local engine (~150MB)
+                Activate local engine (~1.5GB)
               </button>
             )}
           </div>
         </div>
+
 
         {error && (
           <div className="bg-rose-500/10 border border-rose-500/20 rounded-lg p-4 flex items-start gap-3 animate-in fade-in slide-in-from-top-4">

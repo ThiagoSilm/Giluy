@@ -7,6 +7,7 @@ interface AppState {
   depth: DepthLevel;
   state: ProcessState;
   modelStatus: ModelStatus;
+  modelProgress: string;
   result: ProcessResponse | null;
   history: HistoryItem[];
   error: string | null;
@@ -15,6 +16,7 @@ interface AppState {
   setDepth: (depth: DepthLevel) => void;
   setState: (state: ProcessState) => void;
   setModelStatus: (status: ModelStatus) => void;
+  setModelProgress: (progress: string) => void;
   setResult: (result: ProcessResponse | null) => void;
   setError: (error: string | null) => void;
   addToHistory: (item: HistoryItem) => void;
@@ -28,6 +30,7 @@ export const useStore = create<AppState>()(
       depth: 1,
       state: 'idle',
       modelStatus: 'none',
+      modelProgress: '',
       result: null,
       history: [],
       error: null,
@@ -36,6 +39,7 @@ export const useStore = create<AppState>()(
       setDepth: (depth) => set({ depth }),
       setState: (state) => set({ state }),
       setModelStatus: (modelStatus) => set({ modelStatus }),
+      setModelProgress: (modelProgress) => set({ modelProgress }),
       setResult: (result) => set({ result }),
       setError: (error) => set({ error }),
       addToHistory: (item) => set((state) => ({ 
@@ -50,3 +54,4 @@ export const useStore = create<AppState>()(
     }
   )
 );
+

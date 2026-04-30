@@ -17,18 +17,12 @@ export function useProcess() {
   } = useStore();
 
   const loadModel = async () => {
-    if (modelStatus === 'ready') return;
-    if (modelStatus === 'loading') {
-      // Wait for existing loading process
-      while (useStore.getState().modelStatus === 'loading') {
-        await new Promise(r => setTimeout(r, 100));
-      }
-      return;
-    };
+    if (modelStatus === 'ready' || modelStatus === 'loading') return;
     
     setModelStatus('loading');
     try {
-      await InferenceService.loadModel('phi-3-mini-q4', '/models/phi3-q4.bin');
+      // Local model using WebLLM
+      await InferenceService.loadModel('phi-3-mini-q4', 'webllm');
       setModelStatus('ready');
     } catch (err: any) {
       console.error("Model loading error:", err);
@@ -52,8 +46,7 @@ export function useProcess() {
     try {
       const inputSignal = calculateCoherence(textToProcess);
 
-      // Execute offline inference via Worker
-      const resultData = await InferenceService.infer(textToProcess);
+      const resultData = await InferenceService.infer(textToProcess, depth);
 
       const output = resultData.text || "SIGNAL_LOSS: NO_CONTINUITY";
       const outputSignal = calculateCoherence(output);
@@ -70,7 +63,8 @@ export function useProcess() {
         coherenceGain: Number((outputSignal.pt - inputSignal.pt).toFixed(2)),
         mode,
         timestamp: Date.now(),
-        signalData: outputSignal,
+        // Replace generated coherence with the actual extraction telemetry from inference worker
+        signalData: resultData.signalData || outputSignal,
       };
 
       setResult(result);
