@@ -72,7 +72,7 @@ export class InferenceService {
     });
   }
 
-  static async infer(prompt: string): Promise<any> {
+  static async infer(prompt: string, depth: number): Promise<any> {
     if (!this.worker) throw new Error('Inference worker not initialized');
 
     return new Promise((resolve, reject) => {
@@ -89,7 +89,7 @@ export class InferenceService {
       this.worker!.addEventListener('message', handler);
       this.worker!.postMessage({
         type: 'INFER',
-        payload: { prompt }
+        payload: { prompt, depth }
       });
     });
   }
