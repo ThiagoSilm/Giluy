@@ -10,6 +10,7 @@ export interface ProcessingResult {
   level: FiltrationLevel;
   error?: string;
   latency: number;
+  source?: string;
 }
 
 export interface HistoricalEvent {

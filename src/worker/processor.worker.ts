@@ -10,10 +10,10 @@ self.onmessage = async (e: MessageEvent) => {
       result = ColdLogicProcessor.processLevel1(text);
       break;
     case FiltrationLevel.RAW_STATE_PROCESSOR:
-      result = ColdLogicProcessor.processLevel2(text);
+      result = await ColdLogicProcessor.processLevel2(text);
       break;
     case FiltrationLevel.ETHER_CHRONOVISOR:
-      result = ColdLogicProcessor.processLevel3(text);
+      result = await ColdLogicProcessor.processLevel3(text);
       break;
     default:
       result = ColdLogicProcessor.processLevel1(text);
