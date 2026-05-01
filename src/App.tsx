@@ -3,21 +3,27 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layout } from './components/Layout';
 import { InputBox } from './components/InputBox';
 import { DepthSlider } from './components/DepthSlider';
 import { OutputPanel } from './components/OutputPanel';
 import { History } from './components/History';
 import { useStore } from './store/useStore';
-import { Sparkles, Info, ShieldAlert } from 'lucide-react';
+import { useConfigStore } from './store/useConfigStore';
+import { Sparkles, Info, ShieldAlert, Settings } from 'lucide-react';
 import { cn } from './lib/utils';
+import { ConfigScreen } from './components/ConfigScreen';
 
 export default function App() {
   const { error } = useStore();
+  const { isConfigured } = useConfigStore();
+  const [showConfig, setShowConfig] = useState(!isConfigured);
 
   return (
-    <Layout>
+    <Layout openConfig={() => setShowConfig(true)}>
+      {(showConfig || !isConfigured) && <ConfigScreen onClose={() => setShowConfig(false)} />}
+      
       {/* Hero Section */}
       <section className="flex flex-col gap-6 py-8">
         <div className="flex flex-col gap-2 max-w-2xl">
