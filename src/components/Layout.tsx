@@ -1,9 +1,9 @@
 import React from 'react';
 import { useStore } from '../store/useStore';
-import { Shield, Info, History as HistoryIcon, Terminal, Settings } from 'lucide-react';
+import { Shield, Info, History as HistoryIcon, Terminal } from 'lucide-react';
 import { cn } from '../lib/utils';
 
-export const Layout: React.FC<{ children: React.ReactNode, openConfig: () => void }> = ({ children, openConfig }) => {
+export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <div className="min-h-screen bg-[#050505] text-white selection:bg-white selection:text-black flex flex-col font-sans">
       {/* Header */}
@@ -17,10 +17,6 @@ export const Layout: React.FC<{ children: React.ReactNode, openConfig: () => voi
             </span>
           </div>
           <nav className="flex items-center gap-6">
-             <button onClick={openConfig} className="text-[10px] uppercase tracking-widest opacity-50 hover:opacity-100 transition-opacity flex items-center gap-2">
-                <Settings size={12} />
-                <span className="hidden sm:inline">API</span>
-             </button>
              <button className="text-[10px] uppercase tracking-widest opacity-50 hover:opacity-100 transition-opacity flex items-center gap-2">
                <Shield size={12} />
                <span className="hidden sm:inline">Purity Check</span>

@@ -1,8 +1,10 @@
+import { GoogleGenAI } from "@google/genai";
 import { useStore } from "../store/useStore";
 import { getPromptByLevel } from "../protocols/prompts";
 import { calculateCoherence } from "../lib/coherence";
 import { HistoryItem, ProcessResponse, ProtocolMode } from "../types";
-import { callApi } from "../lib/api";
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export function useProcess() {
   const { input, depth, setState, setResult, setError, addToHistory, input: storeInput } = useStore();
@@ -18,8 +20,16 @@ export function useProcess() {
       const systemInstruction = getPromptByLevel(depth);
       const inputSignal = calculateCoherence(textToProcess);
 
-      const output = await callApi(systemInstruction, textToProcess);
-      
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: textToProcess,
+        config: {
+          systemInstruction: systemInstruction,
+          temperature: 0.1, // Low temperature for higher signal-purity
+        },
+      });
+
+      const output = response.text || "SIGNAL_LOSS: NO_CONTINUITY";
       const outputSignal = calculateCoherence(output);
 
       const mode: ProtocolMode = 
