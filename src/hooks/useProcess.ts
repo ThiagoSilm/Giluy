@@ -1,56 +1,35 @@
+import { GoogleGenAI } from "@google/genai";
 import { useStore } from "../store/useStore";
 import { getPromptByLevel } from "../protocols/prompts";
 import { calculateCoherence } from "../lib/coherence";
 import { HistoryItem, ProcessResponse, ProtocolMode } from "../types";
-import { InferenceService } from "../services/inferenceService";
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export function useProcess() {
-  const { 
-    depth, 
-    setState, 
-    setResult, 
-    setError, 
-    addToHistory, 
-    input: storeInput,
-    modelStatus,
-    setModelStatus
-  } = useStore();
-
-  const loadModel = async () => {
-    if (modelStatus === 'ready' || modelStatus === 'loading') return;
-    
-    setModelStatus('loading');
-    try {
-      // Simulation of loading a quantized model (e.g. Phi-3 or Gemma)
-      // In a real scenario, this URL would point to the .wasm or quantized .bin
-      await InferenceService.loadModel('phi-3-mini-q4', '/models/phi3-q4.bin');
-      setModelStatus('ready');
-    } catch (err: any) {
-      console.error("Model loading error:", err);
-      setError("Failed to load local model: " + err.message);
-      setModelStatus('error');
-    }
-  };
+  const { input, depth, setState, setResult, setError, addToHistory, input: storeInput } = useStore();
 
   const processText = async (customInput?: string) => {
     const textToProcess = customInput || storeInput;
     if (!textToProcess.trim()) return;
 
-    if (modelStatus !== 'ready') {
-      await loadModel();
-      if (modelStatus === 'error') return;
-    }
-
     setState('processing');
     setError(null);
 
     try {
+      const systemInstruction = getPromptByLevel(depth);
       const inputSignal = calculateCoherence(textToProcess);
 
-      // Execute offline inference via Worker
-      const resultData = await InferenceService.infer(textToProcess);
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: textToProcess,
+        config: {
+          systemInstruction: systemInstruction,
+          temperature: 0.1, // Low temperature for higher signal-purity
+        },
+      });
 
-      const output = resultData.text || "SIGNAL_LOSS: NO_CONTINUITY";
+      const output = response.text || "SIGNAL_LOSS: NO_CONTINUITY";
       const outputSignal = calculateCoherence(output);
 
       const mode: ProtocolMode = 
@@ -86,5 +65,5 @@ export function useProcess() {
     }
   };
 
-  return { processText, loadModel };
+  return { processText };
 }

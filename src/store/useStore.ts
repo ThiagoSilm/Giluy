@@ -1,12 +1,11 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { DepthLevel, ProcessState, ModelStatus, HistoryItem, ProcessResponse } from '../types';
+import { DepthLevel, ProcessState, HistoryItem, ProcessResponse } from '../types';
 
 interface AppState {
   input: string;
   depth: DepthLevel;
   state: ProcessState;
-  modelStatus: ModelStatus;
   result: ProcessResponse | null;
   history: HistoryItem[];
   error: string | null;
@@ -14,7 +13,6 @@ interface AppState {
   setInput: (input: string) => void;
   setDepth: (depth: DepthLevel) => void;
   setState: (state: ProcessState) => void;
-  setModelStatus: (status: ModelStatus) => void;
   setResult: (result: ProcessResponse | null) => void;
   setError: (error: string | null) => void;
   addToHistory: (item: HistoryItem) => void;
@@ -27,7 +25,6 @@ export const useStore = create<AppState>()(
       input: '',
       depth: 1,
       state: 'idle',
-      modelStatus: 'none',
       result: null,
       history: [],
       error: null,
@@ -35,7 +32,6 @@ export const useStore = create<AppState>()(
       setInput: (input) => set({ input }),
       setDepth: (depth) => set({ depth }),
       setState: (state) => set({ state }),
-      setModelStatus: (modelStatus) => set({ modelStatus }),
       setResult: (result) => set({ result }),
       setError: (error) => set({ error }),
       addToHistory: (item) => set((state) => ({ 

@@ -1,40 +1,46 @@
-import { FiltrationLevel } from '../types';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import React from 'react';
+import { useStore } from '../store/useStore';
+import { DepthLevel } from '../types';
+import { cn } from '../lib/utils';
 
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+export const DepthSlider: React.FC = () => {
+  const { depth, setDepth } = useStore();
 
-interface DepthSliderProps {
-  level: FiltrationLevel;
-  onChange: (level: FiltrationLevel) => void;
-}
-
-export const DepthSlider = ({ level, onChange }: DepthSliderProps) => {
-  const options = [
-    { value: FiltrationLevel.ANTI_EGO, label: "ANTI-EGO" },
-    { value: FiltrationLevel.RAW_STATE_PROCESSOR, label: "RAW STATE" },
-    { value: FiltrationLevel.ETHER_CHRONOVISOR, label: "CHRONOVISOR" },
+  const levels: { val: DepthLevel; label: string; desc: string }[] = [
+    { val: 1, label: 'ANTI-EGO', desc: 'Removes subjective noise and social posturing.' },
+    { val: 2, label: 'RAW SIGNAL', desc: 'Logical extraction. Minimum information entropy.' },
+    { val: 3, label: 'CHRONOVISOR', desc: 'Etheric reconstruction. Sensory frame decoding.' },
   ];
 
   return (
-    <div className="flex flex-col sm:flex-row w-full gap-2 px-3 sm:px-4">
-      {options.map((opt) => (
-        <button
-          key={opt.value}
-          onClick={() => onChange(opt.value)}
-          aria-label={`Select depth: ${opt.label}`}
-          className={cn(
-            "h-[44px] flex-1 border transition-all duration-150 text-[11px] font-bold tracking-[0.1em]",
-            level === opt.value
-              ? "bg-[#333] text-[#fff] border-[#444]"
-              : "bg-[#1a1a1a] text-[#888] border-[#222] hover:border-[#333]"
-          )}
-        >
-          {opt.label}
-        </button>
-      ))}
+    <div className="flex flex-col gap-4">
+      <div className="flex justify-between items-end">
+        <span className="text-[10px] uppercase tracking-[0.2em] opacity-40">Protocol Depth</span>
+        <span className="text-[10px] uppercase tracking-[0.2em] font-mono text-white/60">Tier 0{depth}</span>
+      </div>
+      
+      <div className="grid grid-cols-3 gap-2">
+        {levels.map((l) => (
+          <button
+            key={l.val}
+            onClick={() => setDepth(l.val)}
+            className={cn(
+              "flex flex-col gap-2 p-4 text-left border rounded-lg transition-all duration-300 group",
+              depth === l.val 
+                ? "bg-white text-black border-white" 
+                : "bg-white/[0.02] text-white/40 border-white/10 hover:border-white/30"
+            )}
+          >
+            <span className="text-xs font-bold uppercase tracking-widest">{l.label}</span>
+            <span className={cn(
+              "text-[10px] leading-tight transition-opacity",
+              depth === l.val ? "opacity-70" : "opacity-0 group-hover:opacity-40"
+            )}>
+              {l.desc}
+            </span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 };

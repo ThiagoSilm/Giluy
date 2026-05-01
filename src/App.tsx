@@ -1,150 +1,95 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { FiltrationLevel, ProcessingResult } from './types';
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React from 'react';
+import { Layout } from './components/Layout';
+import { InputBox } from './components/InputBox';
 import { DepthSlider } from './components/DepthSlider';
 import { OutputPanel } from './components/OutputPanel';
-import { CoherenceIndicator } from './components/CoherenceIndicator';
-import { saveEvent } from './lib/db';
-import { THEME } from './constants';
-import { Loader2 } from 'lucide-react';
+import { History } from './components/History';
+import { useStore } from './store/useStore';
+import { Sparkles, Info, ShieldAlert } from 'lucide-react';
+import { cn } from './lib/utils';
 
 export default function App() {
-  const [input, setInput] = useState("");
-  const [level, setLevel] = useState<FiltrationLevel>(FiltrationLevel.ANTI_EGO);
-  const [result, setResult] = useState<ProcessingResult | null>(null);
-  const [processing, setProcessing] = useState(false);
-  const workerRef = useRef<Worker | null>(null);
-
-  useEffect(() => {
-    // Initialize Web Worker
-    workerRef.current = new Worker(new URL('./worker/processor.worker.ts', import.meta.url), {
-      type: 'module'
-    });
-
-    workerRef.current.onmessage = (e: MessageEvent<ProcessingResult>) => {
-      setResult(e.data);
-      setProcessing(false);
-      
-      // Save to history if coherence > 0
-      if (e.data.coherence > 0) {
-        saveEvent({
-          id: crypto.randomUUID(),
-          timestamp: Date.now(),
-          content: e.data.text,
-          coherence: e.data.coherence,
-          level: e.data.level,
-        });
-      }
-    };
-
-    return () => {
-      workerRef.current?.terminate();
-    };
-  }, []);
-
-  const [onboarding, setOnboarding] = useState(true);
-
-  const handleProcess = useCallback(() => {
-    if (!input.trim() || !workerRef.current) return;
-    setOnboarding(false);
-    setProcessing(true);
-    workerRef.current.postMessage({ text: input, level });
-  }, [input, level]);
-
-  const getOnboardingText = () => {
-    switch (level) {
-      case FiltrationLevel.ANTI_EGO: return "Removes basic noise and verbal filler. Perfect for quick clarity.";
-      case FiltrationLevel.RAW_STATE_PROCESSOR: return "Extracts verifiable facts using cold logic axioms. Removes all ego markers.";
-      case FiltrationLevel.ETHER_CHRONOVISOR: return "Reconstructs sensory state fragments. Access the residual vibrational field.";
-    }
-  };
-
-  const handleExport = () => {
-    if (!result) return;
-    const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `giluy_signal_${Date.now()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const getPlaceholder = () => {
-    switch (level) {
-      case FiltrationLevel.ANTI_EGO: return "Enter text for noise dissolution...";
-      case FiltrationLevel.RAW_STATE_PROCESSOR: return "Awaiting input for state extraction...";
-      case FiltrationLevel.ETHER_CHRONOVISOR: return "Tune into residual vibrational field...";
-    }
-  };
+  const { error } = useStore();
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-bg overflow-hidden p-3 sm:p-4 gap-4 max-w-2xl mx-auto w-full">
-      {/* Header / Info */}
-      <div className="flex justify-between items-end">
-        <div>
-          <h1 className="text-[18px] font-bold tracking-tighter text-accent">גִּלּוּי (GILUY)</h1>
-          <p className="text-[10px] uppercase tracking-[0.2em] text-text-secondary">v9.0 / ISO-IEC-2026</p>
+    <Layout>
+      {/* Hero Section */}
+      <section className="flex flex-col gap-6 py-8">
+        <div className="flex flex-col gap-2 max-w-2xl">
+           <h1 className="text-4xl md:text-6xl font-serif italic tracking-tight leading-none">
+             Pure Signal <br />
+             <span className="text-white/40">in the desert of data.</span>
+           </h1>
+           <p className="text-sm text-white/40 max-w-md leading-relaxed mt-2">
+             גִּלּוּי (Giluy) is a protocol for the dissolution of linguistic ego. 
+             It extracts the verifiable kernel of truth from any textual substrate.
+           </p>
         </div>
-        <div className="text-right">
-          <div className="text-[10px] font-mono text-text-secondary">MODE: {FiltrationLevel[level]}</div>
-        </div>
-      </div>
 
-      {onboarding && (
-        <div className="bg-[#1a1a1a] border border-[#333] p-3 text-[11px] text-text-secondary leading-normal">
-          <p className="font-bold text-accent mb-1 uppercase tracking-wider">Protocol Guidance:</p>
-          {getOnboardingText()}
-        </div>
-      )}
+        {error && (
+          <div className="bg-rose-500/10 border border-rose-500/20 rounded-lg p-4 flex items-start gap-3 animate-in fade-in slide-in-from-top-4">
+             <ShieldAlert className="text-rose-500 mt-0.5" size={18} />
+             <div className="flex flex-col gap-1">
+               <span className="text-[10px] uppercase tracking-widest font-bold text-rose-500">System Error</span>
+               <span className="text-xs text-rose-200/60">{error}</span>
+             </div>
+          </div>
+        )}
+      </section>
 
-      {/* Input Section */}
-      <div className="flex-shrink-0 space-y-3">
-        <textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder={getPlaceholder()}
-          className="w-full min-h-[48px] max-h-[160px] p-3 text-[16px] bg-surface border border-input-border text-text-primary placeholder:text-placeholder focus:border-accent focus:outline-none resize-none transition-colors"
-          style={{ height: '120px' }}
-          aria-label="Source text input"
-          aria-describedby="depth-slider"
-        />
+      {/* Control Layer */}
+      <section className="grid grid-cols-1 md:grid-cols-[1fr_300px] gap-8 items-start">
+        <div className="flex flex-col gap-8">
+          <InputBox />
+        </div>
         
-        <div id="depth-slider">
-          <DepthSlider level={level} onChange={setLevel} />
+        <aside className="flex flex-col gap-8">
+          <DepthSlider />
+          
+          <div className="p-6 bg-white/[0.02] border border-white/5 rounded-xl flex flex-col gap-4">
+            <div className="flex items-center gap-2 text-white/60">
+              <Info size={14} />
+              <span className="text-[10px] uppercase tracking-widest">Protocol Instructions</span>
+            </div>
+            <ul className="text-[10px] leading-relaxed text-white/30 space-y-2 list-disc pl-4">
+              <li>Input text must be raw context.</li>
+              <li>Filter level determines logical exclusion depth.</li>
+              <li>Results generated are ephemeral (Session Only).</li>
+              <li>No data is persisted on server-side nodes.</li>
+            </ul>
+          </div>
+        </aside>
+      </section>
+
+      {/* Output Layer */}
+      <section className="py-8">
+        <OutputPanel />
+      </section>
+
+      {/* History Layer */}
+      <section className="py-8">
+        <History />
+      </section>
+
+      {/* About / Manifesto Section (Subtle) */}
+      <section className="mt-20 py-20 border-t border-white/5 opacity-40">
+        <div className="max-w-2xl mx-auto text-center flex flex-col gap-6">
+           <h3 className="text-lg font-serif italic italic">The Axiom of Giluy</h3>
+           <p className="text-xs leading-relaxed tracking-wider italic">
+             "Everything we hear is an opinion, not a fact. Everything we see is a perspective, not the truth."
+             <br />
+             <span className="not-italic text-[10px] uppercase opacity-50 block mt-4">— Marcus Aurelius</span>
+           </p>
+           <p className="text-[10px] leading-relaxed uppercase tracking-[0.2em] max-w-sm mx-auto">
+             Giluy attempts to automate the stoic filter, removing the interpreter to find the interpreted.
+           </p>
         </div>
-
-        <button
-          onClick={handleProcess}
-          disabled={processing || !input.trim()}
-          className="h-[48px] w-full sm:w-[200px] sm:mx-auto block bg-[#1a1a1a] border border-[#444] text-text-primary font-bold text-[12px] tracking-widest hover:bg-[#222] disabled:opacity-50 transition-all flex items-center justify-center gap-2"
-        >
-          {processing ? (
-            <>
-              <Loader2 className="animate-spin" size={16} />
-              REVEALING...
-            </>
-          ) : (
-            "REVEAL SIGNAL"
-          )}
-        </button>
-      </div>
-
-      {/* Metrics Section */}
-      <div className="flex-shrink-0">
-        <CoherenceIndicator value={result?.coherence || 0} />
-      </div>
-
-      {/* Output Section */}
-      <OutputPanel 
-        content={result?.text || ""} 
-        onExport={handleExport}
-      />
-
-      {/* Footer Meta */}
-      <div className="flex justify-between text-[9px] font-mono text-text-secondary uppercase">
-        <span>Latency: {result?.latency.toFixed(2) || "0.00"}ms</span>
-        <span>Standard: ISO/IEC 2026 (GILUY-CORE)</span>
-      </div>
-    </div>
+      </section>
+    </Layout>
   );
 }

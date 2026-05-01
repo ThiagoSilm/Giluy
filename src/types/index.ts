@@ -23,8 +23,6 @@ export interface ProcessResponse {
 
 export type ProcessState = 'idle' | 'processing' | 'success' | 'error';
 
-export type ModelStatus = 'none' | 'loading' | 'ready' | 'error';
-
 export interface HistoryItem extends ProcessResponse {
   id: string;
   input: string;
